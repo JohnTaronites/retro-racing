@@ -1,0 +1,48 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    background-color: #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    max-width: 480px;
+    max-height: 854px;
+    position: relative;
+}
+
+canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+/* For devices in landscape mode, show a message to rotate */
+@media (max-width: 854px) and (orientation: landscape) {
+    #game-container::after {
+        content: "Please rotate your device to portrait mode for the best experience";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        z-index: 1000;
+    }
+}
