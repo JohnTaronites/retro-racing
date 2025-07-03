@@ -6,11 +6,11 @@ class Obstacle extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
-        this.setScale(0.4); // Przykładowe skalowanie
+        this.setScale(0.1);
         this.body.setSize(this.width * 0.8, this.height * 0.8);
 
-        const speed = gameSettings.roadSpeed * 60;
-        this.setVelocityY(speed);
+        // Stała prędkość w dół (np. 220 px/s)
+        this.setVelocityY(220 + Phaser.Math.Between(0, 50));
     }
 
     update() {
