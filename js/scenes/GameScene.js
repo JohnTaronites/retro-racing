@@ -121,6 +121,7 @@ class GameScene extends Phaser.Scene {
         // Update UI
         this.scoreText.setText(`SCORE: ${this.score}`);
         this.levelText.setText(`LEVEL: ${this.level}`);
+console.log(this.enemies.getChildren().map(e => e.y)); // zobaczysz gdzie są wrogowie
     }
     
     spawnEnemy() {
