@@ -3,16 +3,19 @@ class Obstacle extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, 'obstacle');
         scene.add.existing(this);
         scene.physics.add.existing(this);
-
-        this.setScale(0.4);
-        this.body.setSize(this.width * 0.8, this.height * 0.8);
-
-        // ZAWSZE na końcu konstruktora!
-        this.setVelocityY(220 + Phaser.Math.Between(0, 50));
+        
+        this.setScale(0.2);
+        
+        // Ustaw prędkość na bardzo wysoką, stałą wartość
+        this.setVelocityY(280);
     }
-
+    
     update() {
-        if (this.y > this.scene.game.config.height + 100) {
+        // Siłowo ustaw prędkość ponownie przy każdej aktualizacji (obejście problemu)
+        this.setVelocityY(280);
+        
+        // Zniszcz gdy poza ekranem
+        if (this.y > this.scene.game.config.height + 50) {
             this.destroy();
         }
     }
