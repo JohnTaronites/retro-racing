@@ -131,7 +131,7 @@ class GameScene extends Phaser.Scene {
         const x = Phaser.Math.Between(padding, this.game.config.width - padding);
         
         // Create enemy at top of screen
-        const enemy = new Enemy(this, x, -100);
+        const enemy = new Enemy(this, x, -50);
         this.enemies.add(enemy);
     }
     
@@ -143,7 +143,7 @@ class GameScene extends Phaser.Scene {
         const x = Phaser.Math.Between(padding, this.game.config.width - padding);
         
         // Create obstacle at top of screen
-        const obstacle = new Obstacle(this, x, -100);
+        const obstacle = new Obstacle(this, x, -50);
         this.obstacles.add(obstacle);
     }
     
