@@ -105,24 +105,38 @@ class GameScene extends Phaser.Scene {
         }
     }
     
-    update() {
-        if (this.gameOver) return;
-        
-        // Scroll the road
-        this.road.tilePositionY -= gameSettings.roadSpeed;
-        
-        // Update player
-        this.player.update();
-        
-        // Update enemies and obstacles
-        this.enemies.getChildren().forEach(enemy => enemy.update());
-        this.obstacles.getChildren().forEach(obstacle => obstacle.update());
-        
-        // Update UI
-        this.scoreText.setText(`SCORE: ${this.score}`);
-        this.levelText.setText(`LEVEL: ${this.level}`);
-console.log(this.enemies.getChildren().map(e => e.y)); // zobaczysz gdzie są wrogowie
-    }
+   update() {
+    if (this.gameOver) return;
+    
+    // Scroll the road
+    this.road.tilePositionY -= gameSettings.roadSpeed;
+    
+    // Update player
+    this.player.update();
+    
+    // Update enemies and obstacles
+    this.enemies.getChildren().forEach(enemy => {
+        // Debugowanie - wypisz pozycje Y
+        console.log("Enemy Y:", enemy.y);
+        // Siłowe ustawienie prędkości (obejście problemu)
+        enemy.setVelocityY(250);
+        // Wywołaj metodę update obiektu
+        enemy.update();
+    });
+    
+    this.obstacles.getChildren().forEach(obstacle => {
+        // Debugowanie - wypisz pozycje Y
+        console.log("Obstacle Y:", obstacle.y);
+        // Siłowe ustawienie prędkości (obejście problemu)
+        obstacle.setVelocityY(220);
+        // Wywołaj metodę update obiektu
+        obstacle.update();
+    });
+    
+    // Update UI
+    this.scoreText.setText(`SCORE: ${this.score}`);
+    this.levelText.setText(`LEVEL: ${this.level}`);
+}
     
     spawnEnemy() {
         if (this.gameOver) return;
