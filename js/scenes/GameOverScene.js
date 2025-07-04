@@ -1,100 +1,86 @@
-class GameOverScene extends Phaser.Scene {
+class MenuScene extends Phaser.Scene {
     constructor() {
-        super('GameOverScene');
+        super('MenuScene');
     }
-    
+
     create() {
-        // Background
-        const bg = this.add.tileSprite(0, 0, this.game.config.width, this.game.config.height, 'menu_bg');
-        bg.setOrigin(0, 0);
-        bg.tint = 0x555555; // Darker background
+        // Pobierz wymiary ekranu gry
+        const gameWidth = this.cameras.main.width;
+        const gameHeight = this.cameras.main.height;
         
-        // Game Over text
-        const gameOverText = this.add.text(this.game.config.width / 2, 150, 'GAME OVER', {
+        // Dodaj tło menu - metoda skalowania "cover" z dodatkowym powiększeniem o 5%
+        const bg = this.add.image(gameWidth/2, gameHeight/2, 'menu_bg');
+        
+        // Oblicz skalę potrzebną do pokrycia całego ekranu + dodatkowe 5%
+        const scaleX = (gameWidth / bg.width) * 1.05;
+        const scaleY = (gameHeight / bg.height) * 1.05;
+        const scale = Math.max(scaleX, scaleY);
+        
+        // Ustaw skalę obrazu
+        bg.setScale(scale);
+        
+        // Dodaj delikatne przyciemnienie tła pod przyciskiem
+        const buttonY = gameHeight/2 + (gameHeight * 0.15); // Przycisk obniżony o 15%
+        const buttonShadow = this.add.graphics();
+        buttonShadow.fillStyle(0x000000, 0.3);
+        buttonShadow.fillRoundedRect(gameWidth/2 - 160, buttonY - 50, 320, 100, 20);
+        buttonShadow.fillStyle(0x000000, 0.1);
+        buttonShadow.fillRoundedRect(gameWidth/2 - 170, buttonY - 60, 340, 120, 30);
+        
+        // START GAME button - obniżony o 15% i z zaokrąglonymi rogami
+        const startButton = this.add.graphics();
+        startButton.fillStyle(0xFFFFFF, 1);
+        startButton.fillRoundedRect(gameWidth/2 - 150, buttonY - 40, 300, 80, 15);
+        
+        const startText = this.add.text(gameWidth/2, buttonY, 'START GAME', {
             fontFamily: 'Arial',
-            fontSize: '64px',
+            fontSize: '32px',
             fontStyle: 'bold',
-            color: '#ff0000',
-            stroke: '#000000',
-            strokeThickness: 6,
-            align: 'center'
+            color: '#000000'
+        }).setOrigin(0.5);
+        
+        // Obszar interaktywny dla przycisku
+        const hitArea = new Phaser.Geom.Rectangle(gameWidth/2 - 150, buttonY - 40, 300, 80);
+        const hitAreaCallback = Phaser.Geom.Rectangle.Contains;
+        
+        // Dodaj interakcję do przycisku
+        this.input.on('pointerdown', (pointer) => {
+            if (hitAreaCallback(hitArea, pointer.x, pointer.y)) {
+                this.scene.start('GameScene');
+            }
         });
-        gameOverText.setOrigin(0.5);
         
-        // Final score
-        const scoreText = this.add.text(this.game.config.width / 2, 250, `FINAL SCORE: ${gameSettings.score}`, {
+        // Dodaj efekt najechania na przycisk
+        this.input.on('pointermove', (pointer) => {
+            if (hitAreaCallback(hitArea, pointer.x, pointer.y)) {
+                startButton.clear();
+                startButton.fillStyle(0xEEEEEE, 1);
+                startButton.fillRoundedRect(gameWidth/2 - 150, buttonY - 40, 300, 80, 15);
+                document.body.style.cursor = 'pointer';
+            } else {
+                startButton.clear();
+                startButton.fillStyle(0xFFFFFF, 1);
+                startButton.fillRoundedRect(gameWidth/2 - 150, buttonY - 40, 300, 80, 15);
+                document.body.style.cursor = 'default';
+            }
+        });
+        
+        // Instrukcje gry - na dole ekranu
+        this.add.text(gameWidth/2, gameHeight - 100, 'Use LEFT/RIGHT arrows or touch\nthe screen to move your car.', {
             fontFamily: 'Arial',
-            fontSize: '36px',
-            fontStyle: 'bold',
+            fontSize: '18px',
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 4,
             align: 'center'
-        });
-        scoreText.setOrigin(0.5);
+        }).setOrigin(0.5);
         
-        // Level reached
-        const levelText = this.add.text(this.game.config.width / 2, 320, `YOU REACHED LEVEL: ${gameSettings.currentLevel}`, {
+        this.add.text(gameWidth/2, gameHeight - 50, 'Avoid obstacles and enemy cars!', {
             fontFamily: 'Arial',
-            fontSize: '28px',
+            fontSize: '18px',
             color: '#ffffff',
             stroke: '#000000',
-            strokeThickness: 3,
-            align: 'center'
-        });
-        levelText.setOrigin(0.5);
-        
-        // Play Again button
-        const playAgainBtn = this.add.text(this.game.config.width / 2, this.game.config.height / 2 + 100, 'PLAY AGAIN', {
-            fontFamily: 'Arial',
-            fontSize: '36px',
-            fontStyle: 'bold',
-            color: '#ffffff',
-            backgroundColor: '#008800',
-            padding: {
-                x: 20,
-                y: 10
-            }
-        });
-        playAgainBtn.setOrigin(0.5);
-        playAgainBtn.setInteractive({ useHandCursor: true });
-        
-        // Main Menu button
-        const mainMenuBtn = this.add.text(this.game.config.width / 2, this.game.config.height / 2 + 200, 'MAIN MENU', {
-            fontFamily: 'Arial',
-            fontSize: '36px',
-            fontStyle: 'bold',
-            color: '#ffffff',
-            backgroundColor: '#0000aa',
-            padding: {
-                x: 20,
-                y: 10
-            }
-        });
-        mainMenuBtn.setOrigin(0.5);
-        mainMenuBtn.setInteractive({ useHandCursor: true });
-        
-        // Button hover effects
-        [playAgainBtn, mainMenuBtn].forEach(btn => {
-            btn.on('pointerover', () => {
-                btn.setScale(1.1);
-            });
-            
-            btn.on('pointerout', () => {
-                btn.setScale(1);
-            });
-        });
-        
-        // Button click events
-        playAgainBtn.on('pointerdown', () => {
-            this.sound.play('menu_click');
-            this.sound.play('start_game');
-            this.scene.start('GameScene');
-        });
-        
-        mainMenuBtn.on('pointerdown', () => {
-            this.sound.play('menu_click');
-            this.scene.start('MenuScene');
-        });
+            strokeThickness: 4
+        }).setOrigin(0.5);
     }
 }
