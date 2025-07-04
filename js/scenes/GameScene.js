@@ -278,20 +278,27 @@ class GameScene extends Phaser.Scene {
         this.obstacles.add(obstacle);
     }
     
-    handleCollision(player, object) {
-        // kod pozostaje bez zmian
-        if (player.hit()) {
-            this.lives--;
-            
-            if (this.lives >= 0 && this.lifeIcons[this.lives]) {
-                this.lifeIcons[this.lives].setVisible(false);
-            }
-            
-            if (this.lives <= 0) {
-                this.endGame();
-            }
+  // Fragment metody handleCollision w GameScene.js
+handleCollision(player, object) {
+    // Only register hit if player is not invulnerable
+    if (player.hit()) {
+        // Reduce life
+        this.lives--;
+        
+        // Update life icons
+        if (this.lives >= 0 && this.lifeIcons[this.lives]) {
+            this.lifeIcons[this.lives].setVisible(false);
         }
+        
+        // Check for game over
+        if (this.lives <= 0) {
+            this.endGame();
+        }
+        
+        // USUŃ LUB ZAKOMENTUJ jeśli masz tutaj dodatkowe odtwarzanie dźwięku
+        // this.sound.play('crash');
     }
+}
     
     updateScore() {
         // kod pozostaje bez zmian
