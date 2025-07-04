@@ -7,25 +7,38 @@ class GameScene extends Phaser.Scene {
         // Reset game state
         this.lives = gameSettings.maxLives;
         this.score = 0;
-        this.level = 1; // Zawsze zaczynamy od poziomu 1
+        this.level = 1;
         this.gameOver = false;
         
-        // ZMIANA: Zdefiniuj progi poziomów
         this.levelThresholds = [200, 500, 750, 1000];
         this.nextLevelThreshold = this.levelThresholds[0];
         
-        // POPRAWKA: Wypełnienie ekranu obrazem drogi i wyśrodkowanie
         // Pobierz wymiary ekranu gry
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
         
-        // Create scrolling road background - rozciągnięty na cały ekran i wyśrodkowany
-        this.road = this.add.tileSprite(gameWidth/2, 0, gameWidth, gameHeight, 'road');
-        this.road.setOrigin(0.5, 0); // Ustawienie punktu odniesienia na środek górnej krawędzi
+        // CAŁKOWICIE NOWE PODEJŚCIE DO TŁA
         
-        // Dostosowanie obrazu drogi do szerokości ekranu, zachowując proporcje
-        const roadScaleX = gameWidth / 600;
-        this.road.setScale(roadScaleX, 1);
+        // 1. Najpierw dodajemy czarne tło na cały ekran
+        this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x000000);
+        
+        // 2. Dodajemy szarą drogę z odpowiednim marginesem (bez pasów)
+        const roadWidth = gameWidth * 0.8; // 80% szerokości ekranu
+        this.add.rectangle(gameWidth/2, gameHeight/2, roadWidth, gameHeight, 0x555555);
+        
+        // 3. Dodajemy białe linie pośrodku drogi (symulacja pasów)
+        const lineWidth = roadWidth * 0.05;  // szerokość linii to 5% drogi
+        const lineHeight = gameHeight * 0.2; // wysokość linii to 20% ekranu
+        const lineSpacing = gameHeight * 0.4; // odstęp między liniami to 40% ekranu
+        
+        // Tworzymy grupę linii, aby nimi sterować
+        this.roadLines = this.add.group();
+        
+        // Tworzymy kilka linii, aby pokryć całą drogę
+        for (let y = -lineHeight; y < gameHeight + lineHeight; y += lineSpacing) {
+            const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
+            this.roadLines.add(line);
+        }
         
         // Create player
         this.player = new Player(
@@ -72,14 +85,63 @@ class GameScene extends Phaser.Scene {
         this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.5 });
         this.engineSound.play();
         
-        // Debugowanie fizyki (naciśnij klawisz D, by włączyć/wyłączyć)
+        // Debugowanie fizyki
         this.physics.world.createDebugGraphic();
         this.physics.world.debugGraphic.visible = false;
         this.input.keyboard.on('keydown-D', () => {
             this.physics.world.debugGraphic.visible = !this.physics.world.debugGraphic.visible;
         });
+        
+        // Prędkość przewijania drogi
+        this.scrollSpeed = gameSettings.roadSpeed;
     }
     
+    update() {
+        if (this.gameOver) return;
+        
+        // Animacja przewijania linii drogi
+        this.roadLines.getChildren().forEach(line => {
+            line.y += this.scrollSpeed;
+            
+            // Jeśli linia wyjdzie poza ekran, przenieś ją na górę
+            if (line.y > this.cameras.main.height + line.height) {
+                line.y = -line.height;
+            }
+        });
+        
+        // Update player
+        this.player.update();
+        
+        // Update enemies and obstacles
+        this.enemies.getChildren().forEach(enemy => {
+            enemy.setVelocityY(300);
+            enemy.update();
+        });
+        
+        this.obstacles.getChildren().forEach(obstacle => {
+            obstacle.setVelocityY(280);
+            obstacle.update();
+        });
+        
+        // Sprawdź czy osiągnięto próg punktowy dla kolejnego poziomu
+        if (this.score >= this.nextLevelThreshold) {
+            this.levelUp();
+            
+            // Ustaw następny próg (jeśli istnieje)
+            const nextThresholdIndex = this.levelThresholds.indexOf(this.nextLevelThreshold) + 1;
+            if (nextThresholdIndex < this.levelThresholds.length) {
+                this.nextLevelThreshold = this.levelThresholds[nextThresholdIndex];
+            } else {
+                this.nextLevelThreshold = Number.MAX_SAFE_INTEGER;
+            }
+        }
+        
+        // Update UI
+        this.scoreText.setText(`SCORE: ${this.score}`);
+        this.levelText.setText(`LEVEL: ${this.level}`);
+    }
+    
+    // Pozostała część kodu bez zmian
     createUI() {
         // UI Container
         this.uiContainer = this.add.container(0, 0);
@@ -111,95 +173,46 @@ class GameScene extends Phaser.Scene {
         this.lifeIcons = [];
         for (let i = 0; i < this.lives; i++) {
             const icon = this.add.image(40 + i * 40, 70, 'life_icon');
-            // POPRAWKA: Ustawienie skali ikon życia na 0.1
             icon.setScale(0.1);
             this.lifeIcons.push(icon);
             this.uiContainer.add(icon);
         }
     }
     
-    update() {
-        if (this.gameOver) return;
-        
-        // Scroll the road
-        this.road.tilePositionY -= gameSettings.roadSpeed;
-        
-        // Update player
-        this.player.update();
-        
-        // Update enemies and obstacles
-        this.enemies.getChildren().forEach(enemy => {
-            // Siłowe ustawienie prędkości (obejście problemu)
-            enemy.setVelocityY(300);
-            // Wywołaj metodę update obiektu
-            enemy.update();
-        });
-        
-        this.obstacles.getChildren().forEach(obstacle => {
-            // Siłowe ustawienie prędkości (obejście problemu)
-            obstacle.setVelocityY(280);
-            // Wywołaj metodę update obiektu
-            obstacle.update();
-        });
-        
-        // NOWA SEKCJA: Sprawdź czy osiągnięto próg punktowy dla kolejnego poziomu
-        if (this.score >= this.nextLevelThreshold) {
-            this.levelUp();
-            
-            // Ustaw następny próg (jeśli istnieje)
-            const nextThresholdIndex = this.levelThresholds.indexOf(this.nextLevelThreshold) + 1;
-            if (nextThresholdIndex < this.levelThresholds.length) {
-                this.nextLevelThreshold = this.levelThresholds[nextThresholdIndex];
-            } else {
-                // Jeśli przekroczono wszystkie progi, ustawiamy bardzo wysoką wartość
-                this.nextLevelThreshold = Number.MAX_SAFE_INTEGER;
-            }
-        }
-        
-        // Update UI
-        this.scoreText.setText(`SCORE: ${this.score}`);
-        this.levelText.setText(`LEVEL: ${this.level}`);
-    }
-    
-    // Sprawdź czy pozycja jest już zajęta przez inny obiekt
     isPositionOccupied(x, y, minDistance) {
-        // Sprawdź wszystkie przeszkody
         for (let obstacle of this.obstacles.getChildren()) {
             const distanceX = Math.abs(obstacle.x - x);
             if (distanceX < minDistance) {
-                return true; // Pozycja zajęta
+                return true;
             }
         }
         
-        // Sprawdź wszystkich wrogów
         for (let enemy of this.enemies.getChildren()) {
             const distanceX = Math.abs(enemy.x - x);
             if (distanceX < minDistance) {
-                return true; // Pozycja zajęta
+                return true;
             }
         }
         
-        return false; // Pozycja wolna
+        return false;
     }
     
     spawnEnemy() {
         if (this.gameOver) return;
         
         const padding = 50;
-        const minSpacing = 70; // Minimalny odstęp między obiektami
+        const minSpacing = 70;
         let x;
         let attempts = 0;
         const maxAttempts = 10;
         
-        // Próbuj znaleźć wolną pozycję
         do {
             x = Phaser.Math.Between(padding, this.game.config.width - padding);
             attempts++;
         } while (this.isPositionOccupied(x, -50, minSpacing) && attempts < maxAttempts);
         
-        // Utwórz przeciwnika tylko jeśli znaleziono wolną pozycję lub przekroczono próby
         const enemy = new Enemy(this, x, -50);
-        enemy.setVelocityY(300); // Upewnij się, że prędkość jest ustawiona
+        enemy.setVelocityY(300);
         this.enemies.add(enemy);
     }
     
@@ -207,35 +220,29 @@ class GameScene extends Phaser.Scene {
         if (this.gameOver) return;
         
         const padding = 50;
-        const minSpacing = 70; // Minimalny odstęp między obiektami
+        const minSpacing = 70;
         let x;
         let attempts = 0;
         const maxAttempts = 10;
         
-        // Próbuj znaleźć wolną pozycję
         do {
             x = Phaser.Math.Between(padding, this.game.config.width - padding);
             attempts++;
         } while (this.isPositionOccupied(x, -50, minSpacing) && attempts < maxAttempts);
         
-        // Utwórz przeszkodę tylko jeśli znaleziono wolną pozycję lub przekroczono próby
         const obstacle = new Obstacle(this, x, -50);
-        obstacle.setVelocityY(280); // Upewnij się, że prędkość jest ustawiona
+        obstacle.setVelocityY(280);
         this.obstacles.add(obstacle);
     }
     
     handleCollision(player, object) {
-        // Only register hit if player is not invulnerable
         if (player.hit()) {
-            // Reduce life
             this.lives--;
             
-            // Update life icons
             if (this.lives >= 0 && this.lifeIcons[this.lives]) {
                 this.lifeIcons[this.lives].setVisible(false);
             }
             
-            // Check for game over
             if (this.lives <= 0) {
                 this.endGame();
             }
@@ -244,28 +251,23 @@ class GameScene extends Phaser.Scene {
     
     updateScore() {
         if (this.gameOver) return;
-        
-        // Increase score based on current level
         this.score += this.level * 10;
     }
     
     levelUp() {
         if (this.gameOver) return;
         
-        // Increase level
         this.level++;
         gameSettings.currentLevel = this.level;
         
-        // Play level up sound
         this.sound.play('level_up');
         
-        // Increase road speed
-        gameSettings.roadSpeed *= gameSettings.speedIncreasePerLevel;
+        // Zwiększ prędkość przewijania drogi
+        this.scrollSpeed *= gameSettings.speedIncreasePerLevel;
+        gameSettings.roadSpeed = this.scrollSpeed;
         
-        // Make enemies spawn faster
         this.enemyTimer.delay = Math.max(500, gameSettings.enemySpawnTime - (this.level * 100));
         
-        // Flash level text
         this.tweens.add({
             targets: this.levelText,
             scale: 1.5,
@@ -278,21 +280,16 @@ class GameScene extends Phaser.Scene {
     endGame() {
         this.gameOver = true;
         
-        // Stop spawning
         this.enemyTimer.remove();
         this.obstacleTimer.remove();
         this.scoreTimer.remove();
         
-        // Stop engine sound
         this.engineSound.stop();
         
-        // Play game over sound
         this.sound.play('game_over');
         
-        // Save final score
         gameSettings.score = this.score;
         
-        // Show game over screen after a short delay
         this.time.delayedCall(1500, () => {
             this.scene.start('GameOverScene');
         });
