@@ -12,8 +12,8 @@ class GameOverScene extends Phaser.Scene {
         const bg = this.add.image(gameWidth/2, gameHeight/2, 'menu_bg');
         
         // Oblicz skalę potrzebną do pokrycia całego ekranu + dodatkowe 5%
-        const scaleX = (gameWidth / bg.width);
-        const scaleY = (gameHeight / bg.height);
+        const scaleX = (gameWidth / bg.width) * 1.05;
+        const scaleY = (gameHeight / bg.height) * 1.05;
         const scale = Math.max(scaleX, scaleY);
         
         // Ustaw skalę obrazu
@@ -71,11 +71,17 @@ class GameOverScene extends Phaser.Scene {
         // Dodaj interakcję do przycisku
         this.input.on('pointerdown', (pointer) => {
             if (hitAreaCallback(hitArea, pointer.x, pointer.y)) {
+                // NAPRAWIONO: Dodaj dźwięk start_game.wav po kliknięciu Play Again
+                this.sound.play('start_game');
+                
                 // Reset game settings
                 gameSettings.currentLevel = 1;
                 gameSettings.roadSpeed = gameSettings.initialRoadSpeed;
                 
-                this.scene.start('GameScene');
+                // Małe opóźnienie przed przejściem do gry, aby dźwięk miał czas zagrać
+                this.time.delayedCall(300, () => {
+                    this.scene.start('GameScene');
+                });
             }
         });
         
