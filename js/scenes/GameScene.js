@@ -66,6 +66,13 @@ class GameScene extends Phaser.Scene {
         // Start background engine sound
         this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.5 });
         this.engineSound.play();
+        
+        // Debugowanie fizyki (naciśnij klawisz D, by włączyć/wyłączyć)
+        this.physics.world.createDebugGraphic();
+        this.physics.world.debugGraphic.visible = false;
+        this.input.keyboard.on('keydown-D', () => {
+            this.physics.world.debugGraphic.visible = !this.physics.world.debugGraphic.visible;
+        });
     }
     
     createUI() {
@@ -99,66 +106,101 @@ class GameScene extends Phaser.Scene {
         this.lifeIcons = [];
         for (let i = 0; i < this.lives; i++) {
             const icon = this.add.image(40 + i * 40, 70, 'life_icon');
-            icon.setScale(0.1);
+            icon.setScale(0.7);
             this.lifeIcons.push(icon);
             this.uiContainer.add(icon);
         }
     }
     
-   update() {
-    if (this.gameOver) return;
+    update() {
+        if (this.gameOver) return;
+        
+        // Scroll the road
+        this.road.tilePositionY -= gameSettings.roadSpeed;
+        
+        // Update player
+        this.player.update();
+        
+        // Update enemies and obstacles
+        this.enemies.getChildren().forEach(enemy => {
+            // Siłowe ustawienie prędkości (obejście problemu)
+            enemy.setVelocityY(300);
+            // Wywołaj metodę update obiektu
+            enemy.update();
+        });
+        
+        this.obstacles.getChildren().forEach(obstacle => {
+            // Siłowe ustawienie prędkości (obejście problemu)
+            obstacle.setVelocityY(280);
+            // Wywołaj metodę update obiektu
+            obstacle.update();
+        });
+        
+        // Update UI
+        this.scoreText.setText(`SCORE: ${this.score}`);
+        this.levelText.setText(`LEVEL: ${this.level}`);
+    }
     
-    // Scroll the road
-    this.road.tilePositionY -= gameSettings.roadSpeed;
-    
-    // Update player
-    this.player.update();
-    
-    // Update enemies and obstacles
-    this.enemies.getChildren().forEach(enemy => {
-        // Debugowanie - wypisz pozycje Y
-        console.log("Enemy Y:", enemy.y);
-        // Siłowe ustawienie prędkości (obejście problemu)
-        enemy.setVelocityY(250);
-        // Wywołaj metodę update obiektu
-        enemy.update();
-    });
-    
-    this.obstacles.getChildren().forEach(obstacle => {
-        // Debugowanie - wypisz pozycje Y
-        console.log("Obstacle Y:", obstacle.y);
-        // Siłowe ustawienie prędkości (obejście problemu)
-        obstacle.setVelocityY(220);
-        // Wywołaj metodę update obiektu
-        obstacle.update();
-    });
-    
-    // Update UI
-    this.scoreText.setText(`SCORE: ${this.score}`);
-    this.levelText.setText(`LEVEL: ${this.level}`);
-}
+    // Sprawdź czy pozycja jest już zajęta przez inny obiekt
+    isPositionOccupied(x, y, minDistance) {
+        // Sprawdź wszystkie przeszkody
+        for (let obstacle of this.obstacles.getChildren()) {
+            const distanceX = Math.abs(obstacle.x - x);
+            if (distanceX < minDistance) {
+                return true; // Pozycja zajęta
+            }
+        }
+        
+        // Sprawdź wszystkich wrogów
+        for (let enemy of this.enemies.getChildren()) {
+            const distanceX = Math.abs(enemy.x - x);
+            if (distanceX < minDistance) {
+                return true; // Pozycja zajęta
+            }
+        }
+        
+        return false; // Pozycja wolna
+    }
     
     spawnEnemy() {
         if (this.gameOver) return;
         
-        // Random x position within road bounds (add some padding)
         const padding = 50;
-        const x = Phaser.Math.Between(padding, this.game.config.width - padding);
+        const minSpacing = 70; // Minimalny odstęp między obiektami
+        let x;
+        let attempts = 0;
+        const maxAttempts = 10;
         
-        // Create enemy at top of screen
+        // Próbuj znaleźć wolną pozycję
+        do {
+            x = Phaser.Math.Between(padding, this.game.config.width - padding);
+            attempts++;
+        } while (this.isPositionOccupied(x, -50, minSpacing) && attempts < maxAttempts);
+        
+        // Utwórz przeciwnika tylko jeśli znaleziono wolną pozycję lub przekroczono próby
         const enemy = new Enemy(this, x, -50);
+        enemy.setVelocityY(300); // Upewnij się, że prędkość jest ustawiona
         this.enemies.add(enemy);
     }
     
     spawnObstacle() {
         if (this.gameOver) return;
         
-        // Random x position within road bounds (add some padding)
         const padding = 50;
-        const x = Phaser.Math.Between(padding, this.game.config.width - padding);
+        const minSpacing = 70; // Minimalny odstęp między obiektami
+        let x;
+        let attempts = 0;
+        const maxAttempts = 10;
         
-        // Create obstacle at top of screen
+        // Próbuj znaleźć wolną pozycję
+        do {
+            x = Phaser.Math.Between(padding, this.game.config.width - padding);
+            attempts++;
+        } while (this.isPositionOccupied(x, -50, minSpacing) && attempts < maxAttempts);
+        
+        // Utwórz przeszkodę tylko jeśli znaleziono wolną pozycję lub przekroczono próby
         const obstacle = new Obstacle(this, x, -50);
+        obstacle.setVelocityY(280); // Upewnij się, że prędkość jest ustawiona
         this.obstacles.add(obstacle);
     }
     
