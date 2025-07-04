@@ -31,27 +31,29 @@ class GameScene extends Phaser.Scene {
         const lineHeight = gameHeight * 0.1; // wysokość linii to 10% ekranu
         const lineSpacing = gameHeight * 0.3; // odstęp między liniami
         
-        // Tworzymy grupę linii, aby nimi sterować
-        this.roadLines = this.add.group();
-        
-        // Ustalamy dokładną liczbę linii potrzebną do pokrycia ekranu z zapasem
-        const linesNeeded = Math.ceil(gameHeight / lineSpacing) + 2;
-        
-        // Tworzymy określoną liczbę linii z równym odstępem
-        for (let i = 0; i < linesNeeded; i++) {
-            // Obliczamy początkową pozycję Y dla każdej linii
-            // Startujemy od pozycji -lineSpacing (nad ekranem)
-            const y = -lineHeight + (i * lineSpacing);
+        // NAPRAWIONO: Inicjalizacja grupy linii
+        if (!this.roadLines || this.roadLines.getLength() === 0) {
+            this.roadLines = this.add.group();
             
-            const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
-            this.roadLines.add(line);
+            // Ustalamy dokładną liczbę linii potrzebną do pokrycia ekranu z zapasem
+            const linesNeeded = Math.ceil(gameHeight / lineSpacing) + 2;
+            
+            // Tworzymy określoną liczbę linii z równym odstępem
+            for (let i = 0; i < linesNeeded; i++) {
+                // Obliczamy początkową pozycję Y dla każdej linii
+                // Startujemy od pozycji -lineSpacing (nad ekranem)
+                const y = -lineHeight + (i * lineSpacing);
+                
+                const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
+                this.roadLines.add(line);
+            }
         }
         
         // Zapisz wartości do późniejszego użycia przy animacji
         this.lineSettings = {
             spacing: lineSpacing,
             height: lineHeight,
-            count: linesNeeded
+            count: Math.ceil(gameHeight / lineSpacing) + 2
         };
         
         // Create player
@@ -117,31 +119,34 @@ class GameScene extends Phaser.Scene {
         const { spacing, height } = this.lineSettings;
         const gameHeight = this.cameras.main.height;
         
-        this.roadLines.getChildren().forEach(line => {
-            line.y += this.scrollSpeed;
-            
-            // Jeśli linia wyjdzie całkowicie poza dolną krawędź ekranu
-            if (line.y > gameHeight + height/2) {
-                // Znajdź ostatnią linię (najwyżej położoną - z najmniejszą wartością y)
-                let topLine = null;
-                let topY = Number.MAX_SAFE_INTEGER;
+        // NAPRAWIONO: Upewnij się, że roadLines istnieje przed użyciem
+        if (this.roadLines && this.roadLines.getLength() > 0) {
+            this.roadLines.getChildren().forEach(line => {
+                line.y += this.scrollSpeed;
                 
-                this.roadLines.getChildren().forEach(otherLine => {
-                    if (otherLine.y < topY) {
-                        topY = otherLine.y;
-                        topLine = otherLine;
+                // Jeśli linia wyjdzie całkowicie poza dolną krawędź ekranu
+                if (line.y > gameHeight + height/2) {
+                    // Znajdź ostatnią linię (najwyżej położoną - z najmniejszą wartością y)
+                    let topLine = null;
+                    let topY = Number.MAX_SAFE_INTEGER;
+                    
+                    this.roadLines.getChildren().forEach(otherLine => {
+                        if (otherLine.y < topY) {
+                            topY = otherLine.y;
+                            topLine = otherLine;
+                        }
+                    });
+                    
+                    // Przenieś linię nad najwyżej położoną linię
+                    if (topLine) {
+                        line.y = topLine.y - spacing;
+                    } else {
+                        // Fallback w przypadku, gdyby coś poszło nie tak
+                        line.y = -height;
                     }
-                });
-                
-                // Przenieś linię nad najwyżej położoną linię
-                if (topLine) {
-                    line.y = topLine.y - spacing;
-                } else {
-                    // Fallback w przypadku, gdyby coś poszło nie tak
-                    line.y = -height;
                 }
-            }
-        });
+            });
+        }
         
         // Update player
         this.player.update();
@@ -213,7 +218,9 @@ class GameScene extends Phaser.Scene {
         }
     }
     
+    // Reszta kodu pozostaje bez zmian...
     isPositionOccupied(x, y, minDistance) {
+        // kod pozostaje bez zmian
         for (let obstacle of this.obstacles.getChildren()) {
             const distanceX = Math.abs(obstacle.x - x);
             if (distanceX < minDistance) {
@@ -232,6 +239,7 @@ class GameScene extends Phaser.Scene {
     }
     
     spawnEnemy() {
+        // kod pozostaje bez zmian
         if (this.gameOver) return;
         
         const padding = 50;
@@ -251,6 +259,7 @@ class GameScene extends Phaser.Scene {
     }
     
     spawnObstacle() {
+        // kod pozostaje bez zmian
         if (this.gameOver) return;
         
         const padding = 50;
@@ -270,6 +279,7 @@ class GameScene extends Phaser.Scene {
     }
     
     handleCollision(player, object) {
+        // kod pozostaje bez zmian
         if (player.hit()) {
             this.lives--;
             
@@ -284,11 +294,13 @@ class GameScene extends Phaser.Scene {
     }
     
     updateScore() {
+        // kod pozostaje bez zmian
         if (this.gameOver) return;
         this.score += this.level * 10;
     }
     
     levelUp() {
+        // kod pozostaje bez zmian
         if (this.gameOver) return;
         
         this.level++;
@@ -312,6 +324,7 @@ class GameScene extends Phaser.Scene {
     }
     
     endGame() {
+        // kod pozostaje bez zmian
         this.gameOver = true;
         
         this.enemyTimer.remove();
