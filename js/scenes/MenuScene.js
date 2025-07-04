@@ -8,7 +8,7 @@ class MenuScene extends Phaser.Scene {
         const bg = this.add.tileSprite(0, 0, this.game.config.width, this.game.config.height, 'menu_bg');
         bg.setOrigin(0, 0);
         
-        // Title
+        /* Title
         const title = this.add.text(this.game.config.width / 2, 150, 'RETRO RACING', {
             fontFamily: 'Arial',
             fontSize: '48px',
@@ -19,7 +19,7 @@ class MenuScene extends Phaser.Scene {
             align: 'center'
         });
         title.setOrigin(0.5);
-        
+        */
         // Start button
         const startBtn = this.add.text(this.game.config.width / 2, this.game.config.height / 2, 'START GAME', {
             fontFamily: 'Arial',
