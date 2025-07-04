@@ -1,22 +1,21 @@
 class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
-        
-        // Zresetuj zmienne przy każdym tworzeniu instancji
-        this.roadLines = null;
     }
     
     init() {
-        // Ta funkcja jest wywoływana na początku każdego uruchomienia sceny
-        // Zresetuj wszystkie zmienne stanu
-        this.roadLines = null;
+        // Reset wszystkich zmiennych przy każdym uruchomieniu sceny
+        console.log("GameScene init called");
         this.lives = gameSettings.maxLives;
         this.score = 0;
         this.level = 1;
         this.gameOver = false;
+        this.roadLines = null; // Ważne: zresetuj roadLines
     }
     
     create() {
+        console.log("GameScene create started");
+        
         this.levelThresholds = [200, 500, 750, 1000];
         this.nextLevelThreshold = this.levelThresholds[0];
         
@@ -38,17 +37,13 @@ class GameScene extends Phaser.Scene {
         const lineHeight = gameHeight * 0.1; // wysokość linii to 10% ekranu
         const lineSpacing = gameHeight * 0.3; // odstęp między liniami
         
-        // NAPRAWIONO: Tworzenie linii od nowa przy każdym uruchomieniu
-        // Najpierw zniszcz starą grupę, jeśli istnieje
-        if (this.roadLines) {
-            this.roadLines.clear(true, true);
-        }
-        
-        // Tworzymy nową grupę linii
-        this.roadLines = this.add.group();
+        // CAŁKOWICIE NOWE PODEJŚCIE DO TWORZENIA LINII
+        // Zamiast używać grupy, będziemy przechowywać linie w tablicy
+        this.roadLinesArray = [];
         
         // Ustalamy dokładną liczbę linii potrzebną do pokrycia ekranu z zapasem
         const linesNeeded = Math.ceil(gameHeight / lineSpacing) + 2;
+        console.log(`Creating ${linesNeeded} road lines`);
         
         // Tworzymy określoną liczbę linii z równym odstępem
         for (let i = 0; i < linesNeeded; i++) {
@@ -56,7 +51,7 @@ class GameScene extends Phaser.Scene {
             const y = -lineHeight + (i * lineSpacing);
             
             const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
-            this.roadLines.add(line);
+            this.roadLinesArray.push(line);
         }
         
         // Zapisz wartości do późniejszego użycia przy animacji
@@ -121,43 +116,47 @@ class GameScene extends Phaser.Scene {
         // Prędkość przewijania drogi
         this.scrollSpeed = gameSettings.roadSpeed;
         
-        // DEBUG: Dodajemy informację do konsoli o inicjalizacji
-        console.log("GameScene create completed, road lines count:", this.roadLines.getLength());
+        console.log(`GameScene create completed - created ${this.roadLinesArray.length} road lines`);
     }
     
     update() {
         if (this.gameOver) return;
         
         // Animacja przewijania linii drogi
-        if (this.roadLines && this.lineSettings) {
+        if (this.roadLinesArray && this.roadLinesArray.length > 0 && this.lineSettings) {
             const { spacing, height } = this.lineSettings;
             const gameHeight = this.cameras.main.height;
             
-            this.roadLines.getChildren().forEach(line => {
+            for (let i = 0; i < this.roadLinesArray.length; i++) {
+                const line = this.roadLinesArray[i];
+                
+                // Przesuń linię w dół
                 line.y += this.scrollSpeed;
                 
                 // Jeśli linia wyjdzie całkowicie poza dolną krawędź ekranu
                 if (line.y > gameHeight + height/2) {
-                    // Znajdź ostatnią linię (najwyżej położoną - z najmniejszą wartością y)
-                    let topLine = null;
+                    // Znajdź najwyżej położoną linię (z najmniejszą wartością y)
                     let topY = Number.MAX_SAFE_INTEGER;
+                    let topIndex = -1;
                     
-                    this.roadLines.getChildren().forEach(otherLine => {
-                        if (otherLine.y < topY) {
-                            topY = otherLine.y;
-                            topLine = otherLine;
+                    for (let j = 0; j < this.roadLinesArray.length; j++) {
+                        if (this.roadLinesArray[j].y < topY) {
+                            topY = this.roadLinesArray[j].y;
+                            topIndex = j;
                         }
-                    });
+                    }
                     
                     // Przenieś linię nad najwyżej położoną linię
-                    if (topLine) {
-                        line.y = topLine.y - spacing;
+                    if (topIndex !== -1) {
+                        line.y = this.roadLinesArray[topIndex].y - spacing;
                     } else {
                         // Fallback w przypadku, gdyby coś poszło nie tak
                         line.y = -height;
                     }
                 }
-            });
+            }
+        } else {
+            console.warn("Road lines missing in update:", this.roadLinesArray);
         }
         
         // Update player
