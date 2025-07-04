@@ -66,19 +66,20 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         }
     }
     
-    hit() {
-        if (!this.isInvulnerable) {
-        // Odtwórz dźwięk zderzenia z większą głośnością
-        this.scene.sound.play('crash', { volume: 1.5 }); // Zwiększono głośność o połowę;
-            this.invulnerable = true;
-            
-            // Make player invulnerable for a short time
-            this.scene.time.delayedCall(this.invulnerableTime, () => {
-                this.invulnerable = false;
-            });
-            
-            return true; // Hit successful
-        }
-        return false; // Player was invulnerable
+   hit() {
+    if (!this.invulnerable) {
+        // Odtwórz dźwięk zderzenia z lekko zwiększoną głośnością, ale nie przesadzoną
+        this.scene.sound.play('crash', { volume: 0.8 }); // Niższa wartość, aby uniknąć zniekształceń
+        
+        this.invulnerable = true;
+        
+        // Make player invulnerable for a short time
+        this.scene.time.delayedCall(this.invulnerableTime, () => {
+            this.invulnerable = false;
+        });
+        
+        return true; // Hit successful
     }
+    return false; // Player was invulnerable
+}
 }
