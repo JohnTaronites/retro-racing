@@ -14,9 +14,14 @@ class GameScene extends Phaser.Scene {
         this.levelThresholds = [200, 500, 750, 1000];
         this.nextLevelThreshold = this.levelThresholds[0];
         
-        // Create scrolling road background
-        this.road = this.add.tileSprite(0, 0, this.game.config.width, this.game.config.height, 'road');
-        this.road.setOrigin(0, 0);
+        // POPRAWKA: Wyśrodkowanie tła drogi
+        // Pobierz wymiary ekranu gry
+        const gameWidth = this.cameras.main.width;
+        const gameHeight = this.cameras.main.height;
+        
+        // Create scrolling road background - wyśrodkowany
+        this.road = this.add.tileSprite(gameWidth/2, 0, 339, gameHeight, 'road');
+        this.road.setOrigin(0.5, 0); // Ustawienie punktu odniesienia na środek górnej krawędzi
         
         // Create player
         this.player = new Player(
@@ -55,8 +60,6 @@ class GameScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
-        
-        // USUNIĘTO: levelTimer, ponieważ używamy teraz progów punktowych zamiast timera
         
         // Create UI
         this.createUI();
@@ -104,6 +107,7 @@ class GameScene extends Phaser.Scene {
         this.lifeIcons = [];
         for (let i = 0; i < this.lives; i++) {
             const icon = this.add.image(40 + i * 40, 70, 'life_icon');
+            // POPRAWKA: Ustawienie skali ikon życia na 0.1
             icon.setScale(0.1);
             this.lifeIcons.push(icon);
             this.uiContainer.add(icon);
