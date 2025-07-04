@@ -43,7 +43,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('enemy_car', 'assets/images/enemy_car.png');
         this.load.image('obstacle', 'assets/images/obstacle.png');
         this.load.image('road', 'assets/images/road.png');
-        this.load.image('menu_bg', 'assets/images/menu_bg.png');
+        this.load.image('menu_bg', 'assets/images/menu_bg.jpeg');
         this.load.image('life_icon', 'assets/images/life_icon.png');
         
         // Load sounds
