@@ -10,17 +10,23 @@ class Obstacle extends Phaser.Physics.Arcade.Sprite {
         // Ustaw skalę
         this.setScale(0.2);
         
-        // Mniejszy hitbox - 60% oryginalnego rozmiaru
-        this.body.setSize(this.width * 0.6, this.height * 0.6);
-        // Wycentrowanie hitboxa
-        this.body.setOffset(this.width * 0.2, this.height * 0.2);
+        // WAŻNE: Zastosuj skalę przed ustawieniem hitboxa
+        // Najpierw zastosuj skalę do obrazu
+        const scaledWidth = this.width;
+        const scaledHeight = this.height;
         
-        // Ustaw stałą prędkość pionową - wysoka wartość dla pewności
+        // Pełny hitbox pokrywający całe koło (100%)
+        this.body.setSize(scaledWidth, scaledHeight);
+        
+        // Wycentruj hitbox idealnie
+        this.body.setOffset(0, 0);
+        
+        // Ustaw stałą prędkość pionową
         this.setVelocityY(280);
     }
     
     update() {
-        // Ponownie ustaw prędkość przy każdej aktualizacji (obejście problemu)
+        // Ponownie ustaw prędkość przy każdej aktualizacji
         this.setVelocityY(280);
         
         // Zniszcz obiekt gdy znajdzie się poza ekranem
