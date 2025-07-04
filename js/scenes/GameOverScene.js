@@ -8,10 +8,10 @@ class GameOverScene extends Phaser.Scene {
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
         
-        // Dodaj tło menu - metoda skalowania "cover" z dodatkowym powiększeniem o 5%
+        // Dodaj tło menu
         const bg = this.add.image(gameWidth/2, gameHeight/2, 'menu_bg');
         
-        // Oblicz skalę potrzebną do pokrycia całego ekranu + dodatkowe 5%
+        // Oblicz skalę potrzebną do pokrycia całego ekranu
         const scaleX = (gameWidth / bg.width);
         const scaleY = (gameHeight / bg.height);
         const scale = Math.max(scaleX, scaleY);
@@ -71,17 +71,21 @@ class GameOverScene extends Phaser.Scene {
         // Dodaj interakcję do przycisku
         this.input.on('pointerdown', (pointer) => {
             if (hitAreaCallback(hitArea, pointer.x, pointer.y)) {
-                // NAPRAWIONO: Dodaj dźwięk start_game.wav po kliknięciu Play Again
+                // Odtwórz dźwięk
                 this.sound.play('start_game');
                 
-                // Reset game settings
+                // NAPRAWIONO: Resetowanie ustawień gry
                 gameSettings.currentLevel = 1;
                 gameSettings.roadSpeed = gameSettings.initialRoadSpeed;
+                gameSettings.score = 0;
                 
-                // Małe opóźnienie przed przejściem do gry, aby dźwięk miał czas zagrać
-                this.time.delayedCall(300, () => {
-                    this.scene.start('GameScene');
-                });
+                // NAPRAWIONO: Użyj bezpośredniego resetowania i uruchomienia gry
+                this.scene.stop('GameOverScene');
+                this.scene.start('GameScene');
+                
+                // Alternatywnie, jeśli powyższe nie działa, spróbuj to:
+                // this.game.scene.scenes.forEach(scene => scene.scene.stop());
+                // this.game.scene.start('GameScene');
             }
         });
         
