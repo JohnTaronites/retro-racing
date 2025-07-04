@@ -7,8 +7,12 @@ class GameScene extends Phaser.Scene {
         // Reset game state
         this.lives = gameSettings.maxLives;
         this.score = 0;
-        this.level = gameSettings.currentLevel;
+        this.level = 1; // Zawsze zaczynamy od poziomu 1
         this.gameOver = false;
+        
+        // ZMIANA: Zdefiniuj progi poziomów
+        this.levelThresholds = [200, 500, 750, 1000];
+        this.nextLevelThreshold = this.levelThresholds[0];
         
         // Create scrolling road background
         this.road = this.add.tileSprite(0, 0, this.game.config.width, this.game.config.height, 'road');
@@ -52,13 +56,7 @@ class GameScene extends Phaser.Scene {
             loop: true
         });
         
-        // Level timer (level increases every minute)
-        this.levelTimer = this.time.addEvent({
-            delay: 60000,
-            callback: this.levelUp,
-            callbackScope: this,
-            loop: true
-        });
+        // USUNIĘTO: levelTimer, ponieważ używamy teraz progów punktowych zamiast timera
         
         // Create UI
         this.createUI();
@@ -106,7 +104,7 @@ class GameScene extends Phaser.Scene {
         this.lifeIcons = [];
         for (let i = 0; i < this.lives; i++) {
             const icon = this.add.image(40 + i * 40, 70, 'life_icon');
-            icon.setScale(0.1);
+            icon.setScale(0.7);
             this.lifeIcons.push(icon);
             this.uiContainer.add(icon);
         }
@@ -135,6 +133,20 @@ class GameScene extends Phaser.Scene {
             // Wywołaj metodę update obiektu
             obstacle.update();
         });
+        
+        // NOWA SEKCJA: Sprawdź czy osiągnięto próg punktowy dla kolejnego poziomu
+        if (this.score >= this.nextLevelThreshold) {
+            this.levelUp();
+            
+            // Ustaw następny próg (jeśli istnieje)
+            const nextThresholdIndex = this.levelThresholds.indexOf(this.nextLevelThreshold) + 1;
+            if (nextThresholdIndex < this.levelThresholds.length) {
+                this.nextLevelThreshold = this.levelThresholds[nextThresholdIndex];
+            } else {
+                // Jeśli przekroczono wszystkie progi, ustawiamy bardzo wysoką wartość
+                this.nextLevelThreshold = Number.MAX_SAFE_INTEGER;
+            }
+        }
         
         // Update UI
         this.scoreText.setText(`SCORE: ${this.score}`);
@@ -262,7 +274,6 @@ class GameScene extends Phaser.Scene {
         this.enemyTimer.remove();
         this.obstacleTimer.remove();
         this.scoreTimer.remove();
-        this.levelTimer.remove();
         
         // Stop engine sound
         this.engineSound.stop();
