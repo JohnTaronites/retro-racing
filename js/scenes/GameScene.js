@@ -98,7 +98,7 @@ class GameScene extends Phaser.Scene {
         this.createUI();
         
         // Start background engine sound
-        this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.25 }); // Zmniejszono z 0.5 na 0.25
+        this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.10 }); // Zmniejszono z 0.5 na 0.25
         this.engineSound.play();
         
         // Debugowanie fizyki
