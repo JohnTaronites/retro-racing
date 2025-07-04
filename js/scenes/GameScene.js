@@ -31,29 +31,28 @@ class GameScene extends Phaser.Scene {
         const lineHeight = gameHeight * 0.1; // wysokość linii to 10% ekranu
         const lineSpacing = gameHeight * 0.3; // odstęp między liniami
         
-        // NAPRAWIONO: Inicjalizacja grupy linii
-        if (!this.roadLines || this.roadLines.getLength() === 0) {
-            this.roadLines = this.add.group();
+        // NAPRAWIONO: Inicjalizacja grupy linii - usuń błędne sprawdzenie getLength()
+        // Zawsze twórz nową grupę przy każdym uruchomieniu sceny
+        this.roadLines = this.add.group();
+        
+        // Ustalamy dokładną liczbę linii potrzebną do pokrycia ekranu z zapasem
+        const linesNeeded = Math.ceil(gameHeight / lineSpacing) + 2;
+        
+        // Tworzymy określoną liczbę linii z równym odstępem
+        for (let i = 0; i < linesNeeded; i++) {
+            // Obliczamy początkową pozycję Y dla każdej linii
+            // Startujemy od pozycji -lineSpacing (nad ekranem)
+            const y = -lineHeight + (i * lineSpacing);
             
-            // Ustalamy dokładną liczbę linii potrzebną do pokrycia ekranu z zapasem
-            const linesNeeded = Math.ceil(gameHeight / lineSpacing) + 2;
-            
-            // Tworzymy określoną liczbę linii z równym odstępem
-            for (let i = 0; i < linesNeeded; i++) {
-                // Obliczamy początkową pozycję Y dla każdej linii
-                // Startujemy od pozycji -lineSpacing (nad ekranem)
-                const y = -lineHeight + (i * lineSpacing);
-                
-                const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
-                this.roadLines.add(line);
-            }
+            const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
+            this.roadLines.add(line);
         }
         
         // Zapisz wartości do późniejszego użycia przy animacji
         this.lineSettings = {
             spacing: lineSpacing,
             height: lineHeight,
-            count: Math.ceil(gameHeight / lineSpacing) + 2
+            count: linesNeeded
         };
         
         // Create player
@@ -119,8 +118,8 @@ class GameScene extends Phaser.Scene {
         const { spacing, height } = this.lineSettings;
         const gameHeight = this.cameras.main.height;
         
-        // NAPRAWIONO: Upewnij się, że roadLines istnieje przed użyciem
-        if (this.roadLines && this.roadLines.getLength() > 0) {
+        // NAPRAWIONO: Upewnij się, że roadLines istnieje bez użycia getLength()
+        if (this.roadLines) {
             this.roadLines.getChildren().forEach(line => {
                 line.y += this.scrollSpeed;
                 
