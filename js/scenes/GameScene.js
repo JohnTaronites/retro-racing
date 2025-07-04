@@ -19,8 +19,8 @@ class GameScene extends Phaser.Scene {
         
         // CAŁKOWICIE NOWE PODEJŚCIE DO TŁA
         
-        // 1. Najpierw dodajemy ZIELONE tło na cały ekran (zamiast czarnego)
-        this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x2A7D2A); // Zielony kolor trawy
+        // 1. Najpierw dodajemy CIEMNIEJSZĄ ZIELONĄ tło na cały ekran
+        this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x2A7D2A); // Ciemniejszy odcień zieleni
         
         // 2. Dodajemy szarą drogę z odpowiednim marginesem (bez pasów)
         const roadWidth = gameWidth * 0.8; // 80% szerokości ekranu
@@ -97,8 +97,8 @@ class GameScene extends Phaser.Scene {
         // Create UI
         this.createUI();
         
-        // Start background engine sound
-        this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.10 }); // Zmniejszono z 0.5 na 0.25
+        // Start background engine sound - zmniejszona głośność
+        this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.15 }); // Zmniejszono z 0.5 na 0.25
         this.engineSound.play();
         
         // Debugowanie fizyki
@@ -180,7 +180,6 @@ class GameScene extends Phaser.Scene {
         this.levelText.setText(`LEVEL: ${this.level}`);
     }
     
-    // Pozostała część kodu bez zmian
     createUI() {
         // UI Container
         this.uiContainer = this.add.container(0, 0);
@@ -218,9 +217,7 @@ class GameScene extends Phaser.Scene {
         }
     }
     
-    // Reszta kodu pozostaje bez zmian...
     isPositionOccupied(x, y, minDistance) {
-        // kod pozostaje bez zmian
         for (let obstacle of this.obstacles.getChildren()) {
             const distanceX = Math.abs(obstacle.x - x);
             if (distanceX < minDistance) {
@@ -239,7 +236,6 @@ class GameScene extends Phaser.Scene {
     }
     
     spawnEnemy() {
-        // kod pozostaje bez zmian
         if (this.gameOver) return;
         
         const padding = 50;
@@ -259,7 +255,6 @@ class GameScene extends Phaser.Scene {
     }
     
     spawnObstacle() {
-        // kod pozostaje bez zmian
         if (this.gameOver) return;
         
         const padding = 50;
@@ -278,36 +273,30 @@ class GameScene extends Phaser.Scene {
         this.obstacles.add(obstacle);
     }
     
-  // Fragment metody handleCollision w GameScene.js
-handleCollision(player, object) {
-    // Only register hit if player is not invulnerable
-    if (player.hit()) {
-        // Reduce life
-        this.lives--;
-        
-        // Update life icons
-        if (this.lives >= 0 && this.lifeIcons[this.lives]) {
-            this.lifeIcons[this.lives].setVisible(false);
+    handleCollision(player, object) {
+        // Only register hit if player is not invulnerable
+        if (player.hit()) {
+            // Reduce life
+            this.lives--;
+            
+            // Update life icons
+            if (this.lives >= 0 && this.lifeIcons[this.lives]) {
+                this.lifeIcons[this.lives].setVisible(false);
+            }
+            
+            // Check for game over
+            if (this.lives <= 0) {
+                this.endGame();
+            }
         }
-        
-        // Check for game over
-        if (this.lives <= 0) {
-            this.endGame();
-        }
-        
-        // USUŃ LUB ZAKOMENTUJ jeśli masz tutaj dodatkowe odtwarzanie dźwięku
-        // this.sound.play('crash');
     }
-}
     
     updateScore() {
-        // kod pozostaje bez zmian
         if (this.gameOver) return;
         this.score += this.level * 10;
     }
     
     levelUp() {
-        // kod pozostaje bez zmian
         if (this.gameOver) return;
         
         this.level++;
@@ -331,7 +320,6 @@ handleCollision(player, object) {
     }
     
     endGame() {
-        // kod pozostaje bez zmian
         this.gameOver = true;
         
         this.enemyTimer.remove();
