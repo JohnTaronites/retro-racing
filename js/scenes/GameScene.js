@@ -14,14 +14,18 @@ class GameScene extends Phaser.Scene {
         this.levelThresholds = [200, 500, 750, 1000];
         this.nextLevelThreshold = this.levelThresholds[0];
         
-        // POPRAWKA: Wyśrodkowanie tła drogi
+        // POPRAWKA: Wypełnienie ekranu obrazem drogi i wyśrodkowanie
         // Pobierz wymiary ekranu gry
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
         
-        // Create scrolling road background - wyśrodkowany
-        this.road = this.add.tileSprite(gameWidth/2, 0, 339, gameHeight, 'road');
+        // Create scrolling road background - rozciągnięty na cały ekran i wyśrodkowany
+        this.road = this.add.tileSprite(gameWidth/2, 0, gameWidth, gameHeight, 'road');
         this.road.setOrigin(0.5, 0); // Ustawienie punktu odniesienia na środek górnej krawędzi
+        
+        // Dostosowanie obrazu drogi do szerokości ekranu, zachowując proporcje
+        const roadScaleX = gameWidth / 600;
+        this.road.setScale(roadScaleX, 1);
         
         // Create player
         this.player = new Player(
