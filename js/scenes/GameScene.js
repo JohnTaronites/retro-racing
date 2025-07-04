@@ -4,13 +4,12 @@ class GameScene extends Phaser.Scene {
     }
     
     init() {
-        // Reset wszystkich zmiennych przy każdym uruchomieniu sceny
         console.log("GameScene init called");
         this.lives = gameSettings.maxLives;
         this.score = 0;
         this.level = 1;
         this.gameOver = false;
-        this.roadLines = null; // Ważne: zresetuj roadLines
+        this.roadStripeOffset = 0; // Nowa zmienna do śledzenia przesunięcia tekstury drogi
     }
     
     create() {
@@ -23,8 +22,6 @@ class GameScene extends Phaser.Scene {
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
         
-        // CAŁKOWICIE NOWE PODEJŚCIE DO TŁA
-        
         // 1. Najpierw dodajemy CIEMNIEJSZĄ ZIELONĄ tło na cały ekran
         this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x2A7D2A); // Ciemniejszy odcień zieleni
         
@@ -32,34 +29,38 @@ class GameScene extends Phaser.Scene {
         const roadWidth = gameWidth * 0.8; // 80% szerokości ekranu
         this.add.rectangle(gameWidth/2, gameHeight/2, roadWidth, gameHeight, 0x555555);
         
-        // 3. Dodajemy białe linie pośrodku drogi (symulacja pasów)
-        const lineWidth = roadWidth * 0.05;  // szerokość linii to 5% drogi
-        const lineHeight = gameHeight * 0.1; // wysokość linii to 10% ekranu
-        const lineSpacing = gameHeight * 0.3; // odstęp między liniami
+        // 3. CAŁKOWICIE NOWE PODEJŚCIE - dynamiczne rysowanie tekstury drogi z pasami
         
-        // CAŁKOWICIE NOWE PODEJŚCIE DO TWORZENIA LINII
-        // Zamiast używać grupy, będziemy przechowywać linie w tablicy
-        this.roadLinesArray = [];
+        // Tworzenie tekstury graficznej dla pasa drogi
+        const roadStripeGraphics = this.make.graphics({x: 0, y: 0, add: false});
         
-        // Ustalamy dokładną liczbę linii potrzebną do pokrycia ekranu z zapasem
-        const linesNeeded = Math.ceil(gameHeight / lineSpacing) + 2;
-        console.log(`Creating ${linesNeeded} road lines`);
+        // Ustawienia dla pasa drogi
+        const stripeWidth = roadWidth * 0.05;  // szerokość pasa
+        const stripeHeight = gameHeight * 0.1; // wysokość pojedynczego pasa
+        const stripeGap = gameHeight * 0.2;    // przerwa między pasami
+        const totalPatternHeight = stripeHeight + stripeGap;
         
-        // Tworzymy określoną liczbę linii z równym odstępem
-        for (let i = 0; i < linesNeeded; i++) {
-            // Obliczamy początkową pozycję Y dla każdej linii
-            const y = -lineHeight + (i * lineSpacing);
-            
-            const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
-            this.roadLinesArray.push(line);
-        }
+        // Czyścimy grafikę
+        roadStripeGraphics.clear();
         
-        // Zapisz wartości do późniejszego użycia przy animacji
-        this.lineSettings = {
-            spacing: lineSpacing,
-            height: lineHeight,
-            count: linesNeeded
-        };
+        // Rysujemy biały prostokąt (pasek) na górze tekstury
+        roadStripeGraphics.fillStyle(0xFFFFCC);
+        roadStripeGraphics.fillRect(0, 0, stripeWidth, stripeHeight);
+        
+        // Generujemy teksturę z grafiki
+        roadStripeGraphics.generateTexture('roadStripe', stripeWidth, totalPatternHeight);
+        
+        // Tworzymy sprite, który będzie używał tej tekstury jako pasa na drodze
+        // Rozciągamy go na całą wysokość ekranu i dodajemy więcej, aby zapewnić płynne przewijanie
+        this.roadStripeSprite = this.add.tileSprite(
+            gameWidth/2,          // x środka
+            gameHeight/2,         // y środka
+            stripeWidth,          // szerokość pasa
+            gameHeight + totalPatternHeight * 2, // wysokość (ekran + dodatkowa przestrzeń)
+            'roadStripe'          // klucz tekstury
+        );
+        
+        console.log("Road stripe created with dimensions:", stripeWidth, "x", gameHeight + totalPatternHeight * 2);
         
         // Create player
         this.player = new Player(
@@ -116,48 +117,16 @@ class GameScene extends Phaser.Scene {
         // Prędkość przewijania drogi
         this.scrollSpeed = gameSettings.roadSpeed;
         
-        console.log(`GameScene create completed - created ${this.roadLinesArray.length} road lines`);
+        console.log("GameScene create completed");
     }
     
     update() {
         if (this.gameOver) return;
         
-        // Animacja przewijania linii drogi
-        if (this.roadLinesArray && this.roadLinesArray.length > 0 && this.lineSettings) {
-            const { spacing, height } = this.lineSettings;
-            const gameHeight = this.cameras.main.height;
-            
-            for (let i = 0; i < this.roadLinesArray.length; i++) {
-                const line = this.roadLinesArray[i];
-                
-                // Przesuń linię w dół
-                line.y += this.scrollSpeed;
-                
-                // Jeśli linia wyjdzie całkowicie poza dolną krawędź ekranu
-                if (line.y > gameHeight + height/2) {
-                    // Znajdź najwyżej położoną linię (z najmniejszą wartością y)
-                    let topY = Number.MAX_SAFE_INTEGER;
-                    let topIndex = -1;
-                    
-                    for (let j = 0; j < this.roadLinesArray.length; j++) {
-                        if (this.roadLinesArray[j].y < topY) {
-                            topY = this.roadLinesArray[j].y;
-                            topIndex = j;
-                        }
-                    }
-                    
-                    // Przenieś linię nad najwyżej położoną linię
-                    if (topIndex !== -1) {
-                        line.y = this.roadLinesArray[topIndex].y - spacing;
-                    } else {
-                        // Fallback w przypadku, gdyby coś poszło nie tak
-                        line.y = -height;
-                    }
-                }
-            }
-        } else {
-            console.warn("Road lines missing in update:", this.roadLinesArray);
-        }
+        // NOWA ANIMACJA PASA DROGI
+        // Aktualizujemy offset tekstury, aby uzyskać efekt przewijania
+        this.roadStripeOffset += this.scrollSpeed * 0.01; // Mnożnik kontroluje prędkość przewijania
+        this.roadStripeSprite.tilePositionY = this.roadStripeOffset;
         
         // Update player
         this.player.update();
