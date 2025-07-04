@@ -79,13 +79,20 @@ class GameOverScene extends Phaser.Scene {
                 gameSettings.roadSpeed = gameSettings.initialRoadSpeed;
                 gameSettings.score = 0;
                 
-                // NAPRAWIONO: Użyj bezpośredniego resetowania i uruchomienia gry
-                this.scene.stop('GameOverScene');
-                this.scene.start('GameScene');
+                // NAPRAWIONO: Pełne resetowanie gry
+                console.log("Play Again clicked - restarting game");
                 
-                // Alternatywnie, jeśli powyższe nie działa, spróbuj to:
-                // this.game.scene.scenes.forEach(scene => scene.scene.stop());
-                // this.game.scene.start('GameScene');
+                // Najpierw zatrzymaj wszystkie sceny
+                this.scene.stop('GameOverScene');
+                
+                // Zniszcz i utwórz na nowo scenę gry
+                // To wymusza pełne przeładowanie wszystkich zasobów
+                if (this.scene.get('GameScene')) {
+                    this.scene.remove('GameScene');
+                }
+                
+                // Dodaj nową instancję sceny
+                this.scene.add('GameScene', GameScene, true);
             }
         });
         
