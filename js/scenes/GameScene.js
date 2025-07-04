@@ -20,7 +20,7 @@ class GameScene extends Phaser.Scene {
         // CAŁKOWICIE NOWE PODEJŚCIE DO TŁA
         
         // 1. Najpierw dodajemy ZIELONE tło na cały ekran (zamiast czarnego)
-        this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x44AA44); // Zielony kolor trawy
+        this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x2A7D2A); // Zielony kolor trawy
         
         // 2. Dodajemy szarą drogę z odpowiednim marginesem (bez pasów)
         const roadWidth = gameWidth * 0.8; // 80% szerokości ekranu
@@ -98,7 +98,7 @@ class GameScene extends Phaser.Scene {
         this.createUI();
         
         // Start background engine sound
-        this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.5 });
+        this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.25 }); // Zmniejszono z 0.5 na 0.25
         this.engineSound.play();
         
         // Debugowanie fizyki
