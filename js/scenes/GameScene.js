@@ -1,15 +1,22 @@
 class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
+        
+        // Zresetuj zmienne przy każdym tworzeniu instancji
+        this.roadLines = null;
     }
     
-    create() {
-        // Reset game state
+    init() {
+        // Ta funkcja jest wywoływana na początku każdego uruchomienia sceny
+        // Zresetuj wszystkie zmienne stanu
+        this.roadLines = null;
         this.lives = gameSettings.maxLives;
         this.score = 0;
         this.level = 1;
         this.gameOver = false;
-        
+    }
+    
+    create() {
         this.levelThresholds = [200, 500, 750, 1000];
         this.nextLevelThreshold = this.levelThresholds[0];
         
@@ -31,8 +38,13 @@ class GameScene extends Phaser.Scene {
         const lineHeight = gameHeight * 0.1; // wysokość linii to 10% ekranu
         const lineSpacing = gameHeight * 0.3; // odstęp między liniami
         
-        // NAPRAWIONO: Inicjalizacja grupy linii - usuń błędne sprawdzenie getLength()
-        // Zawsze twórz nową grupę przy każdym uruchomieniu sceny
+        // NAPRAWIONO: Tworzenie linii od nowa przy każdym uruchomieniu
+        // Najpierw zniszcz starą grupę, jeśli istnieje
+        if (this.roadLines) {
+            this.roadLines.clear(true, true);
+        }
+        
+        // Tworzymy nową grupę linii
         this.roadLines = this.add.group();
         
         // Ustalamy dokładną liczbę linii potrzebną do pokrycia ekranu z zapasem
@@ -41,7 +53,6 @@ class GameScene extends Phaser.Scene {
         // Tworzymy określoną liczbę linii z równym odstępem
         for (let i = 0; i < linesNeeded; i++) {
             // Obliczamy początkową pozycję Y dla każdej linii
-            // Startujemy od pozycji -lineSpacing (nad ekranem)
             const y = -lineHeight + (i * lineSpacing);
             
             const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
@@ -97,7 +108,7 @@ class GameScene extends Phaser.Scene {
         this.createUI();
         
         // Start background engine sound - zmniejszona głośność
-        this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.15 }); // Zmniejszono z 0.5 na 0.25
+        this.engineSound = this.sound.add('engine_loop', { loop: true, volume: 0.25 });
         this.engineSound.play();
         
         // Debugowanie fizyki
@@ -109,17 +120,19 @@ class GameScene extends Phaser.Scene {
         
         // Prędkość przewijania drogi
         this.scrollSpeed = gameSettings.roadSpeed;
+        
+        // DEBUG: Dodajemy informację do konsoli o inicjalizacji
+        console.log("GameScene create completed, road lines count:", this.roadLines.getLength());
     }
     
     update() {
         if (this.gameOver) return;
         
         // Animacja przewijania linii drogi
-        const { spacing, height } = this.lineSettings;
-        const gameHeight = this.cameras.main.height;
-        
-        // NAPRAWIONO: Upewnij się, że roadLines istnieje bez użycia getLength()
-        if (this.roadLines) {
+        if (this.roadLines && this.lineSettings) {
+            const { spacing, height } = this.lineSettings;
+            const gameHeight = this.cameras.main.height;
+            
             this.roadLines.getChildren().forEach(line => {
                 line.y += this.scrollSpeed;
                 
@@ -179,6 +192,7 @@ class GameScene extends Phaser.Scene {
         this.levelText.setText(`LEVEL: ${this.level}`);
     }
     
+    // Pozostała część kodu bez zmian
     createUI() {
         // UI Container
         this.uiContainer = this.add.container(0, 0);
@@ -273,17 +287,13 @@ class GameScene extends Phaser.Scene {
     }
     
     handleCollision(player, object) {
-        // Only register hit if player is not invulnerable
         if (player.hit()) {
-            // Reduce life
             this.lives--;
             
-            // Update life icons
             if (this.lives >= 0 && this.lifeIcons[this.lives]) {
                 this.lifeIcons[this.lives].setVisible(false);
             }
             
-            // Check for game over
             if (this.lives <= 0) {
                 this.endGame();
             }
