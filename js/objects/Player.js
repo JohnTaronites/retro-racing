@@ -6,10 +6,15 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         // Add player to scene
         scene.add.existing(this);
         scene.physics.add.existing(this);
+        
+        // Set scale and physics properties
         this.setScale(0.2);
-        // Set physics properties
+        // Mniejszy hitbox - 60% oryginalnego rozmiaru
+        this.body.setSize(this.width * 0.6, this.height * 0.6);
+        // Wycentrowanie hitboxa
+        this.body.setOffset(this.width * 0.2, this.height * 0.2);
+        
         this.setCollideWorldBounds(true);
-        this.body.setSize(this.width * 0.8, this.height * 0.8);
         
         // Player is invulnerable after being hit
         this.invulnerable = false;
