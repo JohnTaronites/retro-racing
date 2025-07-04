@@ -19,8 +19,8 @@ class GameScene extends Phaser.Scene {
         
         // CAŁKOWICIE NOWE PODEJŚCIE DO TŁA
         
-        // 1. Najpierw dodajemy czarne tło na cały ekran
-        this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x000000);
+        // 1. Najpierw dodajemy ZIELONE tło na cały ekran (zamiast czarnego)
+        this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x44AA44); // Zielony kolor trawy
         
         // 2. Dodajemy szarą drogę z odpowiednim marginesem (bez pasów)
         const roadWidth = gameWidth * 0.8; // 80% szerokości ekranu
@@ -28,17 +28,31 @@ class GameScene extends Phaser.Scene {
         
         // 3. Dodajemy białe linie pośrodku drogi (symulacja pasów)
         const lineWidth = roadWidth * 0.05;  // szerokość linii to 5% drogi
-        const lineHeight = gameHeight * 0.2; // wysokość linii to 20% ekranu
-        const lineSpacing = gameHeight * 0.4; // odstęp między liniami to 40% ekranu
+        const lineHeight = gameHeight * 0.1; // wysokość linii to 10% ekranu
+        const lineSpacing = gameHeight * 0.3; // odstęp między liniami
         
         // Tworzymy grupę linii, aby nimi sterować
         this.roadLines = this.add.group();
         
-        // Tworzymy kilka linii, aby pokryć całą drogę
-        for (let y = -lineHeight; y < gameHeight + lineHeight; y += lineSpacing) {
+        // Ustalamy dokładną liczbę linii potrzebną do pokrycia ekranu z zapasem
+        const linesNeeded = Math.ceil(gameHeight / lineSpacing) + 2;
+        
+        // Tworzymy określoną liczbę linii z równym odstępem
+        for (let i = 0; i < linesNeeded; i++) {
+            // Obliczamy początkową pozycję Y dla każdej linii
+            // Startujemy od pozycji -lineSpacing (nad ekranem)
+            const y = -lineHeight + (i * lineSpacing);
+            
             const line = this.add.rectangle(gameWidth/2, y, lineWidth, lineHeight, 0xFFFFCC);
             this.roadLines.add(line);
         }
+        
+        // Zapisz wartości do późniejszego użycia przy animacji
+        this.lineSettings = {
+            spacing: lineSpacing,
+            height: lineHeight,
+            count: linesNeeded
+        };
         
         // Create player
         this.player = new Player(
@@ -100,12 +114,32 @@ class GameScene extends Phaser.Scene {
         if (this.gameOver) return;
         
         // Animacja przewijania linii drogi
+        const { spacing, height } = this.lineSettings;
+        const gameHeight = this.cameras.main.height;
+        
         this.roadLines.getChildren().forEach(line => {
             line.y += this.scrollSpeed;
             
-            // Jeśli linia wyjdzie poza ekran, przenieś ją na górę
-            if (line.y > this.cameras.main.height + line.height) {
-                line.y = -line.height;
+            // Jeśli linia wyjdzie całkowicie poza dolną krawędź ekranu
+            if (line.y > gameHeight + height/2) {
+                // Znajdź ostatnią linię (najwyżej położoną - z najmniejszą wartością y)
+                let topLine = null;
+                let topY = Number.MAX_SAFE_INTEGER;
+                
+                this.roadLines.getChildren().forEach(otherLine => {
+                    if (otherLine.y < topY) {
+                        topY = otherLine.y;
+                        topLine = otherLine;
+                    }
+                });
+                
+                // Przenieś linię nad najwyżej położoną linię
+                if (topLine) {
+                    line.y = topLine.y - spacing;
+                } else {
+                    // Fallback w przypadku, gdyby coś poszło nie tak
+                    line.y = -height;
+                }
             }
         });
         
