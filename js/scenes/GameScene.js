@@ -106,7 +106,7 @@ class GameScene extends Phaser.Scene {
         this.lifeIcons = [];
         for (let i = 0; i < this.lives; i++) {
             const icon = this.add.image(40 + i * 40, 70, 'life_icon');
-            icon.setScale(0.7);
+            icon.setScale(0.2);
             this.lifeIcons.push(icon);
             this.uiContainer.add(icon);
         }
