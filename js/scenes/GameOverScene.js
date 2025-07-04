@@ -12,8 +12,8 @@ class GameOverScene extends Phaser.Scene {
         const bg = this.add.image(gameWidth/2, gameHeight/2, 'menu_bg');
         
         // Oblicz skalę potrzebną do pokrycia całego ekranu + dodatkowe 5%
-        const scaleX = (gameWidth / bg.width) * 0.90;
-        const scaleY = (gameHeight / bg.height) * 0.90;
+        const scaleX = (gameWidth / bg.width);
+        const scaleY = (gameHeight / bg.height);
         const scale = Math.max(scaleX, scaleY);
         
         // Ustaw skalę obrazu
