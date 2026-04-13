@@ -20,8 +20,7 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
     
     update() {
-        // Ponownie ustaw prędkość przy każdej aktualizacji (obejście problemu)
-        this.setVelocityY(300);
+        // Prędkość ustawiana przez GameScene (skalowana z poziomem)
         
         // Zniszcz obiekt gdy znajdzie się poza ekranem
         if (this.y > this.scene.game.config.height + 50) {

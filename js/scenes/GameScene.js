@@ -146,14 +146,14 @@ class GameScene extends Phaser.Scene {
         // Update player
         this.player.update();
         
-        // Update enemies and obstacles
+        // Update enemies and obstacles — prędkość skalowana ze scrollSpeed
         this.enemies.getChildren().forEach(enemy => {
-            enemy.setVelocityY(300);
+            enemy.setVelocityY(this.scrollSpeed * 60);
             enemy.update();
         });
         
         this.obstacles.getChildren().forEach(obstacle => {
-            obstacle.setVelocityY(280);
+            obstacle.setVelocityY(this.scrollSpeed * 56);
             obstacle.update();
         });
         
@@ -214,7 +214,9 @@ class GameScene extends Phaser.Scene {
     }
     
     isPositionOccupied(x, y, minDistance) {
+        const yRange = 200; // Sprawdzaj tylko obiekty blisko punktu spawnu (oś Y)
         for (let obstacle of this.obstacles.getChildren()) {
+            if (Math.abs(obstacle.y - y) > yRange) continue;
             const distanceX = Math.abs(obstacle.x - x);
             if (distanceX < minDistance) {
                 return true;
@@ -222,6 +224,7 @@ class GameScene extends Phaser.Scene {
         }
         
         for (let enemy of this.enemies.getChildren()) {
+            if (Math.abs(enemy.y - y) > yRange) continue;
             const distanceX = Math.abs(enemy.x - x);
             if (distanceX < minDistance) {
                 return true;
@@ -246,7 +249,7 @@ class GameScene extends Phaser.Scene {
         } while (this.isPositionOccupied(x, -50, minSpacing) && attempts < maxAttempts);
         
         const enemy = new Enemy(this, x, -50);
-        enemy.setVelocityY(300);
+        enemy.setVelocityY(this.scrollSpeed * 60);
         this.enemies.add(enemy);
     }
     
@@ -265,7 +268,7 @@ class GameScene extends Phaser.Scene {
         } while (this.isPositionOccupied(x, -50, minSpacing) && attempts < maxAttempts);
         
         const obstacle = new Obstacle(this, x, -50);
-        obstacle.setVelocityY(280);
+        obstacle.setVelocityY(this.scrollSpeed * 56);
         this.obstacles.add(obstacle);
     }
     

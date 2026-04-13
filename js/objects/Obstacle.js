@@ -26,8 +26,7 @@ class Obstacle extends Phaser.Physics.Arcade.Sprite {
     }
     
     update() {
-        // Ponownie ustaw prędkość przy każdej aktualizacji
-        this.setVelocityY(280);
+        // Prędkość ustawiana przez GameScene (skalowana z poziomem)
         
         // Zniszcz obiekt gdy znajdzie się poza ekranem
         if (this.y > this.scene.game.config.height + 50) {

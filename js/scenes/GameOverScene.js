@@ -76,7 +76,7 @@ class GameOverScene extends Phaser.Scene {
                 
                 // Reset game settings
                 gameSettings.currentLevel = 1;
-                gameSettings.roadSpeed = gameSettings.initialRoadSpeed;
+                gameSettings.roadSpeed = gameSettings.initialRoadSpeed; // = 5
                 
                 // Małe opóźnienie przed przejściem do gry, aby dźwięk miał czas zagrać
                 this.time.delayedCall(300, () => {

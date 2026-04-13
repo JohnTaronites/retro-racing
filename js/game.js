@@ -31,6 +31,7 @@ const game = new Phaser.Game(config);
 // Global game variables
 let gameSettings = {
     roadSpeed: 5,
+    initialRoadSpeed: 5,
     playerSpeed: 300,
     enemySpawnTime: 2000,
     obstacleSpawnTime: 4000,
