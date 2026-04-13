@@ -9,6 +9,7 @@ class GameScene extends Phaser.Scene {
         this.score = 0;
         this.level = 1;
         this.gameOver = false;
+        this.scrollSpeed = gameSettings.roadSpeed;
         
         this.levelThresholds = [200, 500, 750, 1000];
         this.nextLevelThreshold = this.levelThresholds[0];
@@ -106,8 +107,6 @@ class GameScene extends Phaser.Scene {
             this.physics.world.debugGraphic.visible = !this.physics.world.debugGraphic.visible;
         });
         
-        // Prędkość przewijania drogi
-        this.scrollSpeed = gameSettings.roadSpeed;
     }
     
     update() {
